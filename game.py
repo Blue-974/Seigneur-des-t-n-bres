@@ -3,7 +3,7 @@
 import random
 
 # règles du jeu
-print("Voici les règles: ")
+print("Voici les règles: On distribue à chaque joueur 3 cartes. Un joueur est désigné comme seigneur des ténèbres Grâce aux 3 cartes de sa main il raconte aux autres joueurs la mission qu'il leur a confié. Il donne la parole à un joueur qui se défend grâce à au moins une de ses cartes. Le seigneur des ténèbres donne la parole à un joueur qui a été accusé pour qu'il se défende et ainsi de suite. Quand les explications d’un joueur qui contredisent d’autres informations ou qui ne satisfassent pas le seigneur des ténèbres il se prend un regard noir, le premier joueur qui en récupère 3 est désigné comme coupable, la partie est donc terminée.")
 
 
 # Liste des cartes
