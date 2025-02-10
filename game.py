@@ -2,13 +2,8 @@ import json
 from discord import *
 import random
 
-class Card:
-    def __init__(self, card_type:bool = False, text:str = ""):
-        self.type = card_type # True si carte d'excuse, False si carte d'action
-        self.description = text
-
 class Player:
-    def __init__(self, user_id:int, user_data, hand:list[Card] = [], blame:int = 0, sdt:bool = False):
+    def __init__(self, user_id:int, user_data, hand:list = [], blame:int = 0, sdt:bool = False):
         self.id = user_id
         self.data = user_data
         self.hand = hand # Main du joueur
@@ -16,15 +11,16 @@ class Player:
         self.sdt = sdt # Seigneur des ténèbres
 
 with open('cartes.json', 'r') as f:
-    listcard = json.load(f)
+    allcards = json.load(f)  # Reference de toutes les cartes
 
+listcard = allcards #listcard peut être détruit à souhait
 players = [] #Liste des joueurs
 
 # je spam le mot clef global sur cette variable parce que j'ai la flemme de chercher où est ce que le code croit qu'elle est locale (mais c'est temporaire tkt)
 global game_state
 game_state = 0 # Etat de la partie, différent de 0 partie en cours, 0 pas de partie en cours
 
-player_options = [] # Placeholder
+player_options = []
 
 def reset():
     global players
@@ -32,7 +28,7 @@ def reset():
     global game_state
     game_state = 0
     global listcard
-    listcard = ["card1", "card2", "card3", "card4", "card5", "card6", "card7", "card8", "card9", "card10"] # Placeholder
+    listcard = allcards
 
 def add_player(id:int,data):
     for p in players:
