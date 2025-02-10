@@ -1,18 +1,56 @@
+from discord import *
 import random
 
 class Card:
-    def __init__(self, card_type:bool, text:str):
+    def __init__(self, card_type:bool = False, text:str = ""):
         self.type = card_type # True si carte d'excuse, False si carte d'action
         self.description = text
 
 class Player:
-    def __init__(self, user_id:int,hand:list[Card],blame:int):
+    def __init__(self, user_id:int, user_data, hand:list[Card] = [], blame:int = 0, sdt:bool = False):
         self.id = user_id
-        self.hand = hand
-        self.blame = blame
+        self.data = user_data
+        self.hand = hand # Main du joueur
+        self.blame = blame # Regards noirs
+        self.sdt = sdt # Seigneur des ténèbres
 
-# Liste des cartes
-listcard = ["card1", "card2", "card3", "card4", "card5", "card6", "card7", "card8", "card9", "card10"]
+listcard = ["card1", "card2", "card3", "card4", "card5", "card6", "card7", "card8", "card9", "card10"] # Placeholder
+
+players = [] #Liste des joueurs
+
+game_state = 0 # Etat de la partie, True partie en cours, False pas de partie en cours
+
+player_options = []
+
+def reset():
+    players = []
+    game_state = 0
+    listcard = ["card1", "card2", "card3", "card4", "card5", "card6", "card7", "card8", "card9", "card10"] # Placeholder
+
+def add_player(id:int,data):
+    for p in players:
+        if p.id == id :
+            return False
+    if len(players) > 24:
+        return False
+    new_player = Player(user_id=id,user_data=data)
+    players.append(new_player)
+    return True
+
+def start():
+    if len(players)<1:
+        return False
+    game_state = 1
+    optionsgenerator()
+
+def optionsgenerator():
+    for p in players:
+        player_options.append(SelectOption(label=p.data.name,value=str(p.data.nick)))
+    player_options.append(SelectOption(label="Aléatoire",value="1"))
+    return player_options
+
+def select_random_player():
+    return random.choice(players)
 
 # Fonction pour piocher des cartes
 def draw_cards(player:Player):
@@ -42,12 +80,7 @@ def use_cards(player:Player):
 
 # règles du jeu
 rules_text = (
-        "Comment jouer au jeu:\n"
-        "1. Utilisez `!draw` pour piocher trois cartes.\n"
-        "2. Utilisez `!use <nom_de_carte>` pour jouer une carte et en tirer une nouvelle.\n"
-        "3. Les cartes sont envoyées en message privé pour garder votre main secrète.\n"
-        "4. Amusez-vous et jouez stratégique !\n\n"
-        "Règles du jeu:\n"
+        "### Règles du jeu:\n"
         "On distribue à chaque joueur 3 cartes.\n"
         "Un joueur est désigné comme seigneur des ténèbres.\n"
         "Grâce aux 3 cartes de sa main, il raconte aux autres joueurs la mission qu'il leur a confiée.\n"

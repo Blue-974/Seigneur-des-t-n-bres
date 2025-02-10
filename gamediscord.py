@@ -1,6 +1,5 @@
 from discord import *
 from discord.ext import tasks
-import gameui
 import game
 
 intents = Intents.all()
@@ -11,16 +10,46 @@ tree = app_commands.CommandTree(client)
 # Status personnaliser à remplacer par "Seigneur des Ténèbres" (affichera "Joue à Seigneur des Ténèbres")
 custom_status = Game("Indisponible") 
 
-# Listes des serveurs sur lesquelles les commandes apparaitront, ajouter un Object(id=id_du_server) pour chaque server autorisés.
-# Si cette liste n'est pas remplie tous les serveurs sont autorisés, ce qui semble causer beaucoup de latence pour le chargement des commandes du bot.
-# Actuellement seul mon serveur test est dans la liste.
-allowed_servers = [Object(id=1079439311201648681)] 
+# Listes des serveurs sur lesquelles les commandes apparaitront (pour des raisons d'optimisation)
+allowed_servers = [Object(id=1299459410351095879)] 
 
-# Liste des cartes
-listcard = ["card1", "card2", "card3", "card4", "card5", "card6", "card7", "card8", "card9", "card10"]
 
-# Dictionnaire pour stocker les mains des joueurs
-player_hands = {}
+class StartUI(ui.View):
+    def __init__(self):
+        super().__init__()
+        self.value = None
+    
+    @ui.button(label="Règles du Jeu", style=ButtonStyle.grey)
+    async def rules(self, interaction:Interaction, button:ui.Button):
+        await interaction.response.send_message(game.rules_text,ephemeral=True)
+
+    @ui.button(label="Rejoindre la partie", style=ButtonStyle.grey)
+    async def join(self, interaction:Interaction, button:ui.Button):
+        if game.add_player(interaction.user.id,interaction.user):
+            await interaction.response.send_message(f"{interaction.user.nick} a rejoint la partie !")
+        else:
+            await interaction.response.send_message(f"Tu es déjà dans la partie ou la limite de joueur (24) a été atteinte !",ephemeral=True)
+    
+    @ui.button(label="Commencer", style=ButtonStyle.blurple)
+    async def begin(self, interaction:Interaction, button:ui.Button):
+        if game.start() == False:
+            await interaction.response.send_message("Echec de la partie")
+        else:
+            chan : channel= interaction.channel
+            await chan.send("Début de la Partie !")
+            await chan.send(view=SelectPlayerUI())
+
+class SelectPlayerUI(ui.View):
+    def __init__(self):
+        super().__init__()
+        self.value = None
+    
+    @ui.select(placeholder="selectionner le seigneur des ténèbres",min_values = 1, max_values=len(game.players)+1,options=game.player_options)
+    async def select_player(self, interaction:Interaction, select):
+        if select.values[0] == "1":
+            await interaction.response.send_message(f"{game.select_random_player().data.nick} a été choisi comme seigneur des ténèbres !")
+        else:
+            await interaction.response.send_message(f"{select.values[0]} a été choisi comme seigneur des ténèbres !")
 
 @client.event
 async def on_ready():
@@ -32,12 +61,19 @@ async def on_ready():
 
 @tree.command(name="rules", description = "Affiche les règles du jeu.", guilds=allowed_servers)
 async def rules(ctx):
-    await ctx.response.send_message(game.rules_text)
+    if game.game_state != 0:
+        await ctx.response.send_message(game.rules_text,ephemeral = True)
+    else:
+        await ctx.response.send_message(game.rules_text,ephemeral = False)
 
 @tree.command(name="start", description = "Permet de commencer le jeu", guilds=allowed_servers)
-async def start(ctx):
-    view = gameui.Start()
-    await ctx.response.send_message(view = view)
+async def start(ctx : Interaction):
+    await ctx.response.send_message(view = StartUI())
+
+@tree.command(name="stop", description = "Arrête prématurément le jeu", guilds=allowed_servers)
+async def start(ctx : Interaction):
+    game.reset()
+    await ctx.response.send_message("Partie arrêtée !")
 
 
 # Remplace 'INSERER TOKEN VALIDE ICI' par le token du client
