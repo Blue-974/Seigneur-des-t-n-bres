@@ -18,16 +18,18 @@ listcard = ["card1", "card2", "card3", "card4", "card5", "card6", "card7", "card
 
 players = [] #Liste des joueurs
 
-# je spam le mot clef global sur cette variable parce que j'ai la flemme de chercher où est ce que le code croit qu'elle est locale
+# je spam le mot clef global sur cette variable parce que j'ai la flemme de chercher où est ce que le code croit qu'elle est locale (mais c'est temporaire tkt)
 global game_state
 game_state = 0 # Etat de la partie, différent de 0 partie en cours, 0 pas de partie en cours
 
 player_options = [] # Placeholder
 
 def reset():
-    global game_state
+    global players
     players = []
+    global game_state
     game_state = 0
+    global listcard
     listcard = ["card1", "card2", "card3", "card4", "card5", "card6", "card7", "card8", "card9", "card10"] # Placeholder
 
 def add_player(id:int,data):
@@ -54,7 +56,6 @@ def optionsgenerator():
     for p in players:
         player_options.append(SelectOption(label=p.data.name,value=str(p.id)))
     player_options.append(SelectOption(label="Aléatoire",value="1"))
-    print(player_options)
     return player_options
 
 def select_random_player():
