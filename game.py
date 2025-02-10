@@ -20,13 +20,18 @@ with open('cartes.json', 'r') as f:
 
 players = [] #Liste des joueurs
 
-game_state = 0 # Etat de la partie, True partie en cours, False pas de partie en cours
+# je spam le mot clef global sur cette variable parce que j'ai la flemme de chercher où est ce que le code croit qu'elle est locale (mais c'est temporaire tkt)
+global game_state
+game_state = 0 # Etat de la partie, différent de 0 partie en cours, 0 pas de partie en cours
 
-player_options = []
+player_options = [] # Placeholder
 
 def reset():
+    global players
     players = []
+    global game_state
     game_state = 0
+    global listcard
     listcard = ["card1", "card2", "card3", "card4", "card5", "card6", "card7", "card8", "card9", "card10"] # Placeholder
 
 def add_player(id:int,data):
@@ -40,14 +45,18 @@ def add_player(id:int,data):
     return True
 
 def start():
+    global game_state
+    if game_state != 0:
+        return False
     if len(players)<1:
         return False
     game_state = 1
     optionsgenerator()
 
+# Generateur d'option pour la selection du seigneur des tenebres
 def optionsgenerator():
     for p in players:
-        player_options.append(SelectOption(label=p.data.name,value=str(p.data.nick)))
+        player_options.append(SelectOption(label=p.data.name,value=str(p.id)))
     player_options.append(SelectOption(label="Aléatoire",value="1"))
     return player_options
 

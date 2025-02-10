@@ -13,12 +13,13 @@ custom_status = Game("Indisponible")
 # Listes des serveurs sur lesquelles les commandes apparaitront (pour des raisons d'optimisation)
 allowed_servers = [Object(id=1299459410351095879)] 
 
-
+# Les classes ci dessous sont des preset de message contenant des boutons ou des menu de selection
 class StartUI(ui.View):
     def __init__(self):
         super().__init__()
         self.value = None
-    
+        self = self
+
     @ui.button(label="Règles du Jeu", style=ButtonStyle.grey)
     async def rules(self, interaction:Interaction, button:ui.Button):
         await interaction.response.send_message(game.rules_text,ephemeral=True)
@@ -33,7 +34,7 @@ class StartUI(ui.View):
     @ui.button(label="Commencer", style=ButtonStyle.blurple)
     async def begin(self, interaction:Interaction, button:ui.Button):
         if game.start() == False:
-            await interaction.response.send_message("Echec de la partie")
+            await interaction.response.send_message("Echec de la partie",ephemeral=True)
         else:
             chan : channel= interaction.channel
             await chan.send("Début de la Partie !")
@@ -46,11 +47,22 @@ class SelectPlayerUI(ui.View):
     
     @ui.select(placeholder="selectionner le seigneur des ténèbres",min_values = 1, max_values=len(game.players)+1,options=game.player_options)
     async def select_player(self, interaction:Interaction, select):
+        for p in game.players:
+            if p.sdt == True:
+                await interaction.response.send_message("Un joueur a déjà été désigné comme Seigneur des ténèbres !" ,ephemeral=True)
+                return
         if select.values[0] == "1":
-            await interaction.response.send_message(f"{game.select_random_player().data.nick} a été choisi comme seigneur des ténèbres !")
+            chan : channel= interaction.channel
+            rand_p = game.select_random_player()
+            await chan.send(f"{rand_p.data.nick} a été choisi comme seigneur des ténèbres !")
+            rand_p.sdt = True
         else:
-            await interaction.response.send_message(f"{select.values[0]} a été choisi comme seigneur des ténèbres !")
 
+            for p in game.players:
+                if p.id == select.values[0]:
+                    await chan.send(f"{p.data.nick} a été choisi comme seigneur des ténèbres !")
+                    p.sdt = True
+            
 @client.event
 async def on_ready():
     await client.change_presence(status=Status.online, activity=custom_status)
