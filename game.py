@@ -1,3 +1,4 @@
+import json
 from discord import *
 import random
 
@@ -14,7 +15,8 @@ class Player:
         self.blame = blame # Regards noirs
         self.sdt = sdt # Seigneur des ténèbres
 
-listcard = ["card1", "card2", "card3", "card4", "card5", "card6", "card7", "card8", "card9", "card10"] # Placeholder
+with open('cartes.json', 'r') as f:
+    listcard = json.load(f)
 
 players = [] #Liste des joueurs
 
