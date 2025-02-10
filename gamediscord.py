@@ -1,9 +1,19 @@
-import discord
-from discord.ext import commands
+from discord import *
+from discord.ext import tasks
 import random
 
-intents = discord.Intents.default()
-bot = commands.Bot(command_prefix="!", intents=intents)
+intents = Intents.all()
+client = Client(intents=intents)
+
+tree = app_commands.CommandTree(client)
+
+# Status personnaliser à remplacer par "Seigneur des Ténèbres" (affichera "Joue à Seigneur des Ténèbres")
+custom_status = Game("Indisponible") 
+
+# Listes des serveurs sur lesquelles les commandes apparaitront, ajouter un Object(id=id_du_server) pour chaque server autorisés.
+# Si cette liste n'est pas remplie tous les serveurs sont autorisés, ce qui semble causer beaucoup de latence pour le chargement des commandes du bot.
+# Actuellement seul mon serveur test est dans la liste.
+allowed_servers = [Object(id=1079439311201648681)] 
 
 # Liste des cartes
 listcard = ["card1", "card2", "card3", "card4", "card5", "card6", "card7", "card8", "card9", "card10"]
@@ -11,11 +21,15 @@ listcard = ["card1", "card2", "card3", "card4", "card5", "card6", "card7", "card
 # Dictionnaire pour stocker les mains des joueurs
 player_hands = {}
 
-@bot.event
+@client.event
 async def on_ready():
-    print(f'Connecté en tant que {bot.user}')
+    await client.change_presence(status=Status.online, activity=custom_status)
+    for server in allowed_servers :
+        await tree.sync(guild=server)
+    await client.wait_until_ready()
+    print(f'Connecté en tant que {client.user}')
 
-@bot.command()
+@tree.command(name="règles", description = "Affiche les règles du jeu.", guilds=allowed_servers)
 async def rules(ctx):
     """Affiche les règles du jeu."""
     rules_text = (
@@ -35,7 +49,7 @@ async def rules(ctx):
     )
     await ctx.send(rules_text)
 
-@bot.command()
+@tree.command(name="piocher", description = "Permet de piocher des cartes.", guilds=allowed_servers)
 async def draw(ctx):
     """Permet de piocher des cartes."""
     if ctx.author.id not in player_hands:
@@ -48,7 +62,7 @@ async def draw(ctx):
         await ctx.author.send(f"Voici tes cartes: {', '.join(player_hands[ctx.author.id])}")
         await ctx.send(f"{ctx.author.mention}, tes cartes ont été envoyées en message privé.")
 
-@bot.command()
+@tree.command(name="utiliser", description = "Permet d'utiliser une carte.", guilds=allowed_servers)
 async def use(ctx, card: str):
     """Permet d'utiliser une carte."""
     if ctx.author.id not in player_hands or not player_hands[ctx.author.id]:
@@ -66,5 +80,5 @@ async def use(ctx, card: str):
     else:
         await ctx.author.send(f"La carte {card} n'est pas dans ta main.")
 
-# Remplace 'TON_TOKEN_ICI' par le token de ton bot
-bot.run('TON_TOKEN_ICI')
+# Remplace 'INSERER TOKEN VALIDE ICI' par le token du client
+client.run('INSERER TOKEN VALIDE ICI')
