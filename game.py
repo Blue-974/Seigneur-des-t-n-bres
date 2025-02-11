@@ -1,5 +1,4 @@
 import json
-from discord import *
 import random
 
 class Player:
@@ -16,21 +15,24 @@ with open('cartes.json', 'r') as f:
 listcard = allcards #listcard peut être détruit à souhait
 players = [] #Liste des joueurs
 
-# je spam le mot clef global sur cette variable parce que j'ai la flemme de chercher où est ce que le code croit qu'elle est locale (mais c'est temporaire tkt)
-global game_state
-game_state = 0 # Etat de la partie, différent de 0 partie en cours, 0 pas de partie en cours
+game_state = False
 
 player_options = []
 
 def reset():
     global players
-    players = []
     global game_state
-    game_state = 0
     global listcard
+
+    players = []
+    game_state = False
     listcard = allcards
 
 def add_player(id:int,data):
+    global game_state
+
+    if game_state:
+        return False
     for p in players:
         if p.id == id :
             return False
@@ -42,19 +44,13 @@ def add_player(id:int,data):
 
 def start():
     global game_state
-    if game_state != 0:
+    
+    if game_state == True:
         return False
-    if len(players)<1:
+    elif len(players)<1:
         return False
-    game_state = 1
-    optionsgenerator()
-
-# Generateur d'option pour la selection du seigneur des tenebres
-def optionsgenerator():
-    for p in players:
-        player_options.append(SelectOption(label=p.data.name,value=str(p.id)))
-    player_options.append(SelectOption(label="Aléatoire",value="1"))
-    return player_options
+    else:
+        game_state = 1
 
 def select_random_player():
     return random.choice(players)

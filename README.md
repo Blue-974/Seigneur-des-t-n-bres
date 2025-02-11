@@ -10,5 +10,7 @@ Si les explications d’un joueur contredisent d’autres informations ou ne sat
 Le premier joueur à recevoir 3 regards noirs est désigné coupable et la partie est terminée.
 
 ### Utiliser le bot
+Allumez le bot en executant "bot.py"
 Affichez les règles pour tous avec /rules
 Commencez une partie avec /start
+Arrêtez prématurément une partie avec /stop
