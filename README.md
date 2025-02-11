@@ -1,4 +1,5 @@
-### Oui, seigneur des ténèbres !
+## Oui, seigneur des ténèbres !
+Adapté en bot discord par Scottellow et Blue974
 
 ### Règles du jeu
 On distribue à chaque joueur 3 cartes.

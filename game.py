@@ -1,23 +1,61 @@
+#"Oui, Seigneur des ténèbres" adapté en bot discord par Scottellow et Blue974
+
 import json
 import random
 
-class Player:
-    def __init__(self, user_id:int, user_data, hand:list = [], blame:int = 0, sdt:bool = False):
-        self.id = user_id
-        self.data = user_data
-        self.hand = hand # Main du joueur
-        self.blame = blame # Regards noirs
-        self.sdt = sdt # Seigneur des ténèbres
-
-with open('cartes.json', 'r') as f:
+with open('cartes.json', 'r', encoding='utf-8') as f:
     allcards = json.load(f)  # Reference de toutes les cartes
 
-listcard = allcards #listcard peut être détruit à souhait
+listcard = allcards['cartes'] #listcard peut être détruit à souhait
 players = [] #Liste des joueurs
 
 game_state = False
 
 player_options = []
+
+class Player:
+    def __init__(self, user_id:int, user_data = None, hand:list=None, blame:int = None, sdt:bool = None):
+        self.id = user_id
+        self.data = user_data
+        self.hand = hand if hand is not None else ["", "", ""] # Main du joueur
+        self.blame = blame if blame is not None else 0 # Regards noirs
+        self.sdt = sdt if sdt is not None else False # Seigneur des ténèbres
+
+    # Fonction pour piocher des cartes
+    def draw_cards(self):
+        for d,c in enumerate(self.hand):
+            if c == "" and len(listcard) != 0:
+                while True:
+                    i = random.randint(0,len(listcard)-1)
+                    if self.sdt:
+                        if listcard[i] != "Interruption":
+                            break
+                    else:
+                        break
+                self.hand[d] = listcard.pop(i)
+    
+    # Fonction pour utiliser des cartes
+    def use_cards(self,index):
+        if self.hand[index] != "" and self.hand[index] != "Interruption":
+            played_card = self.hand[index]
+            self.hand[index] = ""
+            return played_card
+        return ""
+    
+    def suffer(self):
+        self.blame += 1
+        if self.blame >= 3:
+            return True
+        return False
+
+def distribute_cards():
+    for p in players:
+        p.draw_cards()
+
+def get_player(id:int):
+    for p in players:
+        if p.id == id:
+            return p
 
 def reset():
     global players
@@ -44,7 +82,7 @@ def add_player(id:int,data):
 
 def start():
     global game_state
-    
+
     if game_state == True:
         return False
     elif len(players)<1:
@@ -54,32 +92,6 @@ def start():
 
 def select_random_player():
     return random.choice(players)
-
-# Fonction pour piocher des cartes
-def draw_cards(player:Player):
-    if len(listcard) < 3:
-        return
-    else:
-        # Vide la main
-        player.hand.clear()
-        # Pioche 3 cartes
-        player.hand.extend(random.sample(listcard, 3))
-        return
-
-
-# Fonction pour utiliser des cartes
-def use_cards(player:Player):
-    while True:
-        card_to_use = input("Quelle carte veux-tu utiliser? (ou tape 'exit' pour quitter): ")
-        if card_to_use == 'exit':
-            break
-        if card_to_use in player.hand:
-            # Retire la carte de la main
-            player.hand.remove(card_to_use)
-            # Pioche une nouvelle carte
-            player.hand.extend(random.sample(listcard, 1))
-        else:
-            return
 
 # règles du jeu
 rules_text = (

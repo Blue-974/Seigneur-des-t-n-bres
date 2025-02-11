@@ -1,3 +1,5 @@
+# "Oui, Seigneur des ténèbres" adapté en bot discord par Scottellow et Blue974
+
 from discord import *
 from discord.ext import tasks
 import game
@@ -7,7 +9,7 @@ client = Client(intents=intents)
 
 tree = app_commands.CommandTree(client)
 
-# Status personnaliser à remplacer par "Seigneur des Ténèbres" (affichera "Joue à Seigneur des Ténèbres")
+# Status personnalisé à remplacer par "Oui, Seigneur des Ténèbres" (affichera "Joue à Oui, Seigneur des Ténèbres")
 custom_status = Game("Indisponible") 
 
 # Listes des serveurs sur lesquelles les commandes apparaitront (pour des raisons d'optimisation)
@@ -84,15 +86,116 @@ async def sdt_select(ctx,value):
              if p.sdt == True:
                  await ctx.response.send_message("Un joueur a déjà été désigné comme Seigneur des ténèbres !", ephemeral=True)
                  return
+    sdt_player : game.Player = game.Player(user_id=0,user_data=None)
     if value == "1":
-        rand_p = game.select_random_player()
-        await ctx.response.send_message(f"{rand_p.data.display_name} a été choisi comme seigneur des ténèbres !")
-        rand_p.sdt = True
+        sdt_player = game.select_random_player()
     else:
         for p in game.players:
             if str(p.id) == value:
-                await ctx.response.send_message(f"{p.data.display_name} a été choisi comme seigneur des ténèbres !")
-                p.sdt = True
+                sdt_player = p
+    view = ui.View()
+    HandButton = ui.Button(label="Voir sa main", style=ButtonStyle.blurple)
+    HandButton.callback = tell_stat
+    view.add_item(HandButton)
+    player_options = await optionsgenerator()
+    PSelect = ui.Select(placeholder="Désignez un.e joueur.se",min_values = 1, max_values=1,options=player_options)
+    PSelect.callback = lambda param : send_blame(param,PSelect.values[0],0,game.Player(user_id=0))
+    view.add_item(PSelect)
+    sdt_player.sdt = True
+    game.distribute_cards()
+    await ctx.response.send_message(f"{sdt_player.data.display_name} a été choisi comme seigneur des ténèbres !", view = view)
+
+async def turn(player : game.Player, round_nm : int, chan : channel):
+    view = ui.View()
+
+    C0Button = ui.Button(label="Jouer Carte 0", style=ButtonStyle.grey)
+    C0Button.callback = lambda param : use_card(param, player, 0)
+
+    C1Button = ui.Button(label="Jouer Carte 1", style=ButtonStyle.grey)
+    C1Button.callback = lambda param : use_card(param, player, 1)
+
+    C2Button = ui.Button(label="Jouer Carte 2", style=ButtonStyle.grey)
+    C2Button.callback = lambda param : use_card(param, player, 2)
+
+    HandButton = ui.Button(label="Voir sa main", style=ButtonStyle.blurple)
+    HandButton.callback = tell_stat
+
+    player_options = await optionsgenerator()
+    PSelect = ui.Select(placeholder="Désignez un.e joueur.se",min_values = 1, max_values=1,options=player_options)
+    PSelect.callback = lambda param : send_blame(param,PSelect.values[0],round_nm,player)
+
+    IntButton = ui.Button(label="Interruption", style=ButtonStyle.blurple)
+    IntButton.callback = interrupt
+
+    BlameButton = ui.Button(label="Jeter un regard noir !", style=ButtonStyle.red)
+    BlameButton.callback = lambda param : blame(param,player)
+
+    for i in [C0Button,C1Button,C2Button,HandButton,PSelect,IntButton,BlameButton]:
+        view.add_item(i)
+    
+    await chan.send(f"## {player.data.display_name}, le Seigneur des Ténèbre veut t'entendre !\nUtilise tes cartes excuse pour rejeter la faute sur quelqu'un d'autre !",view=view)
+
+async def send_blame(ctx : Interaction, value : str, round_nm : int, prev : game.Player):
+    if game.get_player(ctx.user.id).sdt:
+        for p in game.players:
+            if str(p.id) == value:
+                if p.sdt :
+                    await ctx.response.send_message("Le seigneur des ténèbres ne peut pas être blamé pour l'échec de la mission!", ephemeral= True)
+                else:
+                    prev.draw_cards()
+                    await turn(p, round_nm+1,ctx.channel)
+    else :
+        await ctx.response.send_message("Seul le seigneur des ténèbres peut blamer quelqu'un !", ephemeral=True)
+
+async def use_card(ctx : Interaction, player : game.Player, id : int):
+    caller : game.Player = game.get_player(ctx.user.id)
+    if caller == player:
+        card = player.use_cards(id)
+        if card != "":
+            await ctx.response.send_message(f"{player.data.display_name} a joué : {card}")
+        else :
+            await ctx.response.send_message("Vous ne pouvez pas jouer cette carte", ephemeral=True)
+
+async def tell_stat(ctx : Interaction):
+    player : game.Player = game.get_player(ctx.user.id)
+
+    if player.sdt :
+        await ctx.response.send_message(f"Vous êtes le Seigneur des Ténèbres.\n\n Vos cartes sont :\n0 - {player.hand[0]}\n1  - {player.hand[1]}\n2 - {player.hand[2]}" , ephemeral= True)
+    else:
+        await ctx.response.send_message(f"Vous avez reçu **{player.blame}** regards noirs.\n\n Vos cartes sont :\n0 - {player.hand[0]}\n1  - {player.hand[1]}\n2 - {player.hand[2]}" , ephemeral= True)
+
+async def interrupt(ctx : Interaction):
+    player : game.Player = game.get_player(ctx.user.id)
+    for d,c in enumerate(player.hand):
+        if c == "Interruption":
+            player.hand[d] = ""
+            view = ui.View()
+
+            C0Button = ui.Button(label="Jouer Carte 0", style=ButtonStyle.grey)
+            C0Button.callback = lambda param : use_card(param, player, 0)
+
+            C1Button = ui.Button(label="Jouer Carte 1", style=ButtonStyle.grey)
+            C1Button.callback = lambda param : use_card(param, player, 1)
+
+            C2Button = ui.Button(label="Jouer Carte 2", style=ButtonStyle.grey)
+            C2Button.callback = lambda param : use_card(param, player, 2)
+
+            HandButton = ui.Button(label="Voir sa main", style=ButtonStyle.blurple)
+            HandButton.callback = tell_stat
+
+            for i in [C0Button,C1Button,C2Button,HandButton]:
+                view.add_item(i)
+
+            await ctx.response.send_message(f"{player.data.display_name} vous as interrompu, il choisit une carte à vous imposer !",view=view)
+
+async def blame(ctx : Interaction, player : game.Player):
+    chan = ctx.channel
+    if player.suffer():
+        await chan.send(f"## {player.data.display_name}, c'était de ta faute depuis le début ! \n Vous avez reçu 3 regards noirs et perdu la partie")
+        game.reset()
+    else:
+        await ctx.response.send_message(f"{player.data.display_name} a reçu un regard noir ! ({player.blame}/3)")
+
 
 # Remplace 'INSERER TOKEN VALIDE ICI' par le token du client
 client.run('INSERER TOKEN VALIDE ICI')
