@@ -101,7 +101,7 @@ async def sdt_select(ctx,value):
     view.add_item(PSelect)
     sdt_player.sdt = True
     game.distribute_cards()
-    await ctx.response.send_message(f"{sdt_player.data.display_name} a été choisi comme seigneur des ténèbres ! \Ses cartes sont :\n-{sdt_player.hand[0]}\n-{sdt_player.hand[1]}\n-{sdt_player.hand[2]}", view = view)
+    await ctx.response.send_message(f"{sdt_player.data.display_name} a été choisi comme seigneur des ténèbres ! \nSes cartes sont :\n- {sdt_player.hand[0]}\n- {sdt_player.hand[1]}\n- {sdt_player.hand[2]}", view = view)
 
 async def turn(player : game.Player, round_nm : int, chan : channel):
     view = ui.View()
@@ -142,6 +142,14 @@ async def send_blame(ctx : Interaction, value : str, round_nm : int):
                 else:
                     game.distribute_cards()
                     await turn(p, round_nm+1,ctx.channel)
+            elif value == "1":
+                while True:
+                    p = game.select_random_player()
+                    if not p.sdt :
+                        game.distribute_cards()
+                        await turn(p, round_nm+1,ctx.channel)
+                        break
+
     else :
         await ctx.response.send_message("Seul le seigneur des ténèbres peut blamer quelqu'un !", ephemeral=True)
 
