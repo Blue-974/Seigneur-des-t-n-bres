@@ -120,7 +120,7 @@ async def turn(player : game.Player, round_nm : int, chan : channel):
 
     player_options = await optionsgenerator()
     PSelect = ui.Select(placeholder="Désignez un.e joueur.se",min_values = 1, max_values=1,options=player_options)
-    PSelect.callback = lambda param : send_blame(param,PSelect.values[0],round_nm,player)
+    PSelect.callback = lambda param : send_blame(param,PSelect.values[0],round_nm)
 
     IntButton = ui.Button(label="Interruption", style=ButtonStyle.blurple)
     IntButton.callback = lambda param : interrupt(param, player)
@@ -133,14 +133,14 @@ async def turn(player : game.Player, round_nm : int, chan : channel):
     
     await chan.send(f"## {player.data.display_name}, le Seigneur des Ténèbre veut t'entendre !\nUtilise tes cartes excuse pour rejeter la faute sur quelqu'un d'autre !",view=view)
 
-async def send_blame(ctx : Interaction, value : str, round_nm : int, prev : game.Player):
+async def send_blame(ctx : Interaction, value : str, round_nm : int):
     if game.get_player(ctx.user.id).sdt:
         for p in game.players:
             if str(p.id) == value:
                 if p.sdt :
                     await ctx.response.send_message("Le seigneur des ténèbres ne peut pas être blamé pour l'échec de la mission!", ephemeral= True)
                 else:
-                    prev.draw_cards()
+                    game.distribute_cards()
                     await turn(p, round_nm+1,ctx.channel)
     else :
         await ctx.response.send_message("Seul le seigneur des ténèbres peut blamer quelqu'un !", ephemeral=True)
@@ -156,7 +156,6 @@ async def use_card(ctx : Interaction, player : game.Player, id : int):
 
 async def tell_stat(ctx : Interaction):
     player : game.Player = game.get_player(ctx.user.id)
-
     if player.sdt :
         await ctx.response.send_message(f"Vous êtes le Seigneur des Ténèbres.\n\n Vos cartes sont :\n0 - {player.hand[0]}\n1  - {player.hand[1]}\n2 - {player.hand[2]}" , ephemeral= True)
     else:
