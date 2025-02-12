@@ -32,6 +32,8 @@ class Player:
                             if d == 2:
                                 if not(self.hand[0] == "Interruption" or self.hand[1] == "Interruption"):
                                     break
+                            else:
+                                break
                 self.hand[d] = listcard.pop(i)
     
     # Fonction pour utiliser des cartes
