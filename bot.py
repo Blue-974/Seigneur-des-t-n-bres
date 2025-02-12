@@ -24,11 +24,9 @@ async def on_ready():
     print(f'Connecté en tant que {client.user}')
 
 @tree.command(name="rules", description = "Affiche les règles du jeu.", guilds=allowed_servers)
-async def send_rules(ctx):
-        if game.game_state:
-            await ctx.response.send_message(game.rules_text,ephemeral = True)
-        else:
-            await ctx.response.send_message(game.rules_text,ephemeral = False)
+async def rules(ctx):
+    await send_rules(ctx)
+        
 
 @tree.command(name="start", description = "Permet de commencer le jeu", guilds=allowed_servers)
 async def start(ctx : Interaction):
@@ -125,7 +123,7 @@ async def turn(player : game.Player, round_nm : int, chan : channel):
     PSelect.callback = lambda param : send_blame(param,PSelect.values[0],round_nm,player)
 
     IntButton = ui.Button(label="Interruption", style=ButtonStyle.blurple)
-    IntButton.callback = interrupt
+    IntButton.callback = lambda param : interrupt(param, player)
 
     BlameButton = ui.Button(label="Jeter un regard noir !", style=ButtonStyle.red)
     BlameButton.callback = lambda param : blame(param,player)
@@ -164,8 +162,13 @@ async def tell_stat(ctx : Interaction):
     else:
         await ctx.response.send_message(f"Vous avez reçu **{player.blame}** regards noirs.\n\n Vos cartes sont :\n0 - {player.hand[0]}\n1  - {player.hand[1]}\n2 - {player.hand[2]}" , ephemeral= True)
 
-async def interrupt(ctx : Interaction):
+async def interrupt(ctx : Interaction, turn_p : game.Player):
     player : game.Player = game.get_player(ctx.user.id)
+    
+    if player == turn_p:
+        await ctx.response.send_message("Il ne serait pas judicieux de vous interrompre vous même !", ephemeral=True)
+        return
+
     for d,c in enumerate(player.hand):
         if c == "Interruption":
             player.hand[d] = ""
@@ -187,15 +190,24 @@ async def interrupt(ctx : Interaction):
                 view.add_item(i)
 
             await ctx.response.send_message(f"{player.data.display_name} vous as interrompu, il choisit une carte à vous imposer !",view=view)
+            return
+    await ctx.response.send_message("Vous n'avez pas de carte Interruption !", ephemeral=True)
 
 async def blame(ctx : Interaction, player : game.Player):
-    chan = ctx.channel
-    if player.suffer():
-        await chan.send(f"## {player.data.display_name}, c'était de ta faute depuis le début ! \n Vous avez reçu 3 regards noirs et perdu la partie")
-        game.reset()
+    if game.get_player(ctx.user.id).sdt:
+        chan = ctx.channel
+        if player.suffer():
+            await chan.send(f"## {player.data.display_name}, c'était de ta faute depuis le début ! \n Vous avez reçu 3 regards noirs et perdu la partie")
+            game.reset()
+        else:
+            await ctx.response.send_message(f"{player.data.display_name} a reçu un regard noir ! ({player.blame}/3)")
+    else :
+        ctx.response.send_message("Seul le seigneur des ténèbres peut jeter un regard noir !", ephemeral=True)
+
+async def send_rules(ctx):
+    if game.game_state:
+        await ctx.response.send_message(game.rules_text,ephemeral = True)
     else:
-        await ctx.response.send_message(f"{player.data.display_name} a reçu un regard noir ! ({player.blame}/3)")
-
-
+        await ctx.response.send_message(game.rules_text,ephemeral = False)
 # Remplace 'INSERER TOKEN VALIDE ICI' par le token du client
 client.run('INSERER TOKEN VALIDE ICI')

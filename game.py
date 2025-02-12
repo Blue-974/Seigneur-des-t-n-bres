@@ -27,11 +27,11 @@ class Player:
             if c == "" and len(listcard) != 0:
                 while True:
                     i = random.randint(0,len(listcard)-1)
-                    if self.sdt:
-                        if listcard[i] != "Interruption":
-                            break
-                    else:
-                        break
+                    if listcard[i] == "Interruption":
+                        if not self.sdt:
+                            if d == 2:
+                                if not(self.hand[0] == "Interruption" or self.hand[1] == "Interruption"):
+                                    break
                 self.hand[d] = listcard.pop(i)
     
     # Fonction pour utiliser des cartes
