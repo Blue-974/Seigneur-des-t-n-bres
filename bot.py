@@ -30,7 +30,7 @@ async def rules(ctx):
 
 @tree.command(name="start", description = "Permet de commencer le jeu", guilds=allowed_servers)
 async def start(ctx : Interaction):
-    view = ui.View()
+    view = ui.View(timeout=600)
 
     RulesButton = ui.Button(label="Règles du Jeu", style=ButtonStyle.grey)
     RulesButton.callback = send_rules
@@ -62,12 +62,12 @@ async def add_player(ctx):
 async def optionsgenerator():
     player_options = []
     for p in game.players:
-        player_options.append(SelectOption(label=p.data.name,value=str(p.id)))
+        player_options.append(SelectOption(label=p.data.display_name,value=str(p.id)))
     player_options.append(SelectOption(label="Aléatoire",value="1"))
     return player_options
 
 async def start(ctx):
-    view = ui.View()
+    view = ui.View(timeout=600)
     if game.game_state:
         await ctx.response.send_message("Une partie est déjà en court !",ephemeral=True)
     elif game.start() == False:
@@ -91,7 +91,7 @@ async def sdt_select(ctx,value):
         for p in game.players:
             if str(p.id) == value:
                 sdt_player = p
-    view = ui.View()
+    view = ui.View(timeout=600)
     HandButton = ui.Button(label="Voir sa main", style=ButtonStyle.blurple)
     HandButton.callback = tell_stat
     view.add_item(HandButton)
@@ -104,7 +104,7 @@ async def sdt_select(ctx,value):
     await ctx.response.send_message(f"{sdt_player.data.display_name} a été choisi comme seigneur des ténèbres ! \nSes cartes sont :\n- {sdt_player.hand[0]}\n- {sdt_player.hand[1]}\n- {sdt_player.hand[2]}", view = view)
 
 async def turn(player : game.Player, round_nm : int, chan : channel):
-    view = ui.View()
+    view = ui.View(timeout=600)
 
     C0Button = ui.Button(label="Jouer Carte 0", style=ButtonStyle.grey)
     C0Button.callback = lambda param : use_card(param, player, 0)
@@ -131,7 +131,7 @@ async def turn(player : game.Player, round_nm : int, chan : channel):
     for i in [C0Button,C1Button,C2Button,HandButton,PSelect,IntButton,BlameButton]:
         view.add_item(i)
     
-    await chan.send(f"## {player.data.display_name}, le Seigneur des Ténèbre veut t'entendre !\nUtilise tes cartes excuse pour rejeter la faute sur quelqu'un d'autre !",view=view)
+    await chan.send(f"## {player.data.display_name}, le Seigneur des Ténèbres veut t'entendre !\nUtilise tes cartes excuse pour rejeter la faute sur quelqu'un d'autre !",view=view)
 
 async def send_blame(ctx : Interaction, value : str, round_nm : int):
     if game.get_player(ctx.user.id).sdt:
@@ -148,7 +148,7 @@ async def send_blame(ctx : Interaction, value : str, round_nm : int):
                     if not p.sdt :
                         game.distribute_cards()
                         await turn(p, round_nm+1,ctx.channel)
-                        break
+                        return
 
     else :
         await ctx.response.send_message("Seul le seigneur des ténèbres peut blamer quelqu'un !", ephemeral=True)
@@ -161,6 +161,8 @@ async def use_card(ctx : Interaction, player : game.Player, id : int):
             await ctx.response.send_message(f"{player.data.display_name} a joué : {card}")
         else :
             await ctx.response.send_message("Vous ne pouvez pas jouer cette carte", ephemeral=True)
+    else:
+        await ctx.response.send_message("Ce n'est pas votre tour !", ephemeral=True)
 
 async def tell_stat(ctx : Interaction):
     player : game.Player = game.get_player(ctx.user.id)
@@ -179,7 +181,7 @@ async def interrupt(ctx : Interaction, turn_p : game.Player):
     for d,c in enumerate(player.hand):
         if c == "Interruption":
             player.hand[d] = ""
-            view = ui.View()
+            view = ui.View(timeout=600)
 
             C0Button = ui.Button(label="Jouer Carte 0", style=ButtonStyle.grey)
             C0Button.callback = lambda param : use_card(param, player, 0)
@@ -196,7 +198,7 @@ async def interrupt(ctx : Interaction, turn_p : game.Player):
             for i in [C0Button,C1Button,C2Button,HandButton]:
                 view.add_item(i)
 
-            await ctx.response.send_message(f"{player.data.display_name} vous as interrompu, il choisit une carte à vous imposer !",view=view)
+            await ctx.response.send_message(f"## Objection ! Ca ne s'est pas déroulé comme ça ! \n{player.data.display_name} vous as interrompu, il choisit une carte à vous imposer !",view=view)
             return
     await ctx.response.send_message("Vous n'avez pas de carte Interruption !", ephemeral=True)
 
