@@ -8,6 +8,7 @@ Grâce aux 3 cartes de sa main, il raconte aux autres joueurs la mission qu'il l
 Il donne la parole à un joueur qui se défend grâce à au moins une de ses cartes.
 Le seigneur des ténèbres donne ensuite la parole à un joueur accusé pour qu'il se défende, et ainsi de suite.
 Si les explications d’un joueur contredisent d’autres informations ou ne satisfont pas le seigneur des ténèbres, il reçoit un regard noir.
+Vous pouvez parler sans que le seigneur des ténèbres ne vous donne la parole grâce à la carte interruption qui coupe la parole du joueur s’exprimant, vous pourrez ainsi vous défendre ou accuser quelqu’un.
 Le premier joueur à recevoir 3 regards noirs est désigné coupable et la partie est terminée.
 
 ### Utiliser le bot

@@ -97,11 +97,11 @@ async def sdt_select(ctx,value):
     view.add_item(HandButton)
     player_options = await optionsgenerator()
     PSelect = ui.Select(placeholder="Désignez un.e joueur.se",min_values = 1, max_values=1,options=player_options)
-    PSelect.callback = lambda param : send_blame(param,PSelect.values[0],0,game.Player(user_id=0))
+    PSelect.callback = lambda param : send_blame(param,PSelect.values[0],0)
     view.add_item(PSelect)
     sdt_player.sdt = True
     game.distribute_cards()
-    await ctx.response.send_message(f"{sdt_player.data.display_name} a été choisi comme seigneur des ténèbres !", view = view)
+    await ctx.response.send_message(f"{sdt_player.data.display_name} a été choisi comme seigneur des ténèbres ! \Ses cartes sont :\n-{sdt_player.hand[0]}\n-{sdt_player.hand[1]}\n-{sdt_player.hand[2]}", view = view)
 
 async def turn(player : game.Player, round_nm : int, chan : channel):
     view = ui.View()
