@@ -76,7 +76,7 @@ def add_player(id:int,data):
     for p in players:
         if p.id == id :
             return False
-    if len(players) > 24:
+    if len(players) >= 6:
         return False
     new_player = Player(user_id=id,user_data=data)
     players.append(new_player)

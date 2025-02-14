@@ -9,8 +9,8 @@ client = Client(intents=intents)
 
 tree = app_commands.CommandTree(client)
 
-# Status personnalisé à remplacer par "Oui, Seigneur des Ténèbres" (affichera "Joue à Oui, Seigneur des Ténèbres")
-custom_status = Game("Indisponible") 
+# Status personnalisé (affichera "Joue à Oui, Seigneur des Ténèbres !")
+custom_status = Game("Oui, Seigneur des Ténèbres !") 
 
 # Listes des serveurs sur lesquelles les commandes apparaitront (pour des raisons d'optimisation)
 allowed_servers = [Object(id=1299459410351095879)]
@@ -44,7 +44,7 @@ async def start(ctx : Interaction):
     buttons = [RulesButton,JoinButton,StartButton]
     for b in buttons:
         view.add_item(item=b)
-    await ctx.response.send_message("## Oui, Seigneur des Ténèbres !\nLa partie est sur le point de se lancer ! Limite de joueur max : 24",view=view)
+    await ctx.response.send_message("## Oui, Seigneur des Ténèbres !\nLa partie est sur le point de se lancer ! Limite de joueur max : 6",view=view)
 
 @tree.command(name="stop", description = "Arrête prématurément le jeu", guilds=allowed_servers)
 async def stop(ctx : Interaction):
@@ -56,7 +56,7 @@ async def add_player(ctx):
     if game.add_player(ctx.user.id,ctx.user):
         await ctx.response.send_message(f"{ctx.user.display_name} a rejoint la partie !")
     else:
-        await ctx.response.send_message(f"Tu es déjà dans la partie, la partie a déjà commencé ou la limite de joueur (24) a été atteinte !",ephemeral=True)
+        await ctx.response.send_message(f"Tu es déjà dans la partie, la partie a déjà commencé ou la limite de joueur (6) a été atteinte !",ephemeral=True)
 
 # Generateur d'option pour la selection du seigneur des tenebres
 async def optionsgenerator():
